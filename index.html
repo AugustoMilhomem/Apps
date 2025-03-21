@@ -179,6 +179,8 @@
     </style>
 </head>
 <body>
+
+      
     <div class="chat-container">
         <div class="chat-header">
             <span>🤖 Simulador de Vendas</span>
@@ -621,6 +623,224 @@
         function handleKeyPress(e) {
             if (e.key === 'Enter') sendMessage(true);
         }
+
+        function startClientSimulation() {
+    // Esconder opções iniciais e iniciar a simulação
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = '';
+    sendMessage(null, "Selecione a dificuldade:");
+
+    // Criar botões de dificuldade
+    const optionsDiv = document.createElement('div');
+    optionsDiv.className = 'options';
+    const difficulties = [
+        { name: "Fácil", objections: 4 },
+        { name: "Médio", objections: 6 },
+        { name: "Difícil", objections: 10 }
+    ];
+
+    difficulties.forEach(difficulty => {
+        const btn = document.createElement('div');
+        btn.className = 'option-btn';
+        btn.textContent = difficulty.name;
+        btn.onclick = () => startQuiz(difficulty.objections);
+        optionsDiv.appendChild(btn);
+    });
+
+    chatBox.appendChild(optionsDiv);
+}
+
+function startQuiz(objectionCount) {
+    // Configurar o quiz com base no número de objeções selecionadas
+    const questions = getQuestions().slice(0, objectionCount); // Seleciona as primeiras N questões
+    let score = 0;
+    let questionIndex = 0;
+
+    function displayQuestion() {
+        if (questionIndex >= questions.length) {
+            return showResults(score);
+        }
+
+        const currentQuestion = questions[questionIndex];
+        const msg = document.createElement('div');
+        msg.className = 'message bot-msg';
+        msg.textContent = currentQuestion.question;
+        chatBox.appendChild(msg);
+
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'options';
+
+        currentQuestion.options.forEach((option, index) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.textContent = option;
+            btn.onclick = () => handleAnswer(index, currentQuestion.answer, currentQuestion);
+            optionsDiv.appendChild(btn);
+        });
+
+        chatBox.appendChild(optionsDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function handleAnswer(selected, correctAnswer, currentQuestion) {
+        const feedbackMsg = document.createElement('div');
+        feedbackMsg.className = 'message bot-msg';
+
+        if (selected === correctAnswer) {
+            feedbackMsg.innerHTML = `<span style="color: #00ff00">✅ Resposta correta! Parabéns!</span>`;
+            score += 10;
+            chatBox.appendChild(feedbackMsg);
+
+            // Avança automaticamente para a próxima pergunta
+            setTimeout(() => {
+                chatBox.removeChild(chatBox.lastChild); // Remove as opções anteriores
+                questionIndex++;
+                displayQuestion();
+            }, 1500);
+        } else {
+            feedbackMsg.innerHTML = `<span style="color: #ff4444">❌ Resposta incorreta.</span><br>A resposta correta é: <b>${currentQuestion.options[correctAnswer]}</b>.`;
+            score -= 5;
+            chatBox.appendChild(feedbackMsg);
+
+            // Exibe botão "Próxima Pergunta"
+            const nextBtn = document.createElement('div');
+            nextBtn.className = 'option-btn';
+            nextBtn.textContent = 'Próxima Pergunta';
+            nextBtn.onclick = () => {
+                chatBox.removeChild(nextBtn); // Remove o botão
+                chatBox.removeChild(chatBox.lastChild); // Remove as opções anteriores
+                questionIndex++;
+                displayQuestion();
+            };
+            chatBox.appendChild(nextBtn);
+        }
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function showResults(finalScore) {
+        const resultScreen = document.getElementById('resultScreen');
+        const finalScoreElement = document.getElementById('finalScore');
+        const resultMessage = document.getElementById('resultMessage');
+
+        finalScoreElement.textContent = finalScore;
+        resultMessage.textContent = finalScore >= 50 ? 
+            "Excelente! Você domina o manejo de objeções!" : 
+            "Continue praticando para melhorar.";
+
+        resultScreen.classList.add('active');
+        chatBox.style.display = 'none';
+        document.querySelector('.input-area').style.display = 'none';
+    }
+
+    // Iniciar o quiz
+    displayQuestion();
+}
+
+function getQuestions() {
+    return [
+        {
+            question: "1. Objeção: 'O preço é muito alto.' O que você deve fazer quando o cliente diz que o preço é muito alto?",
+            options: [
+                "a) Reduzir imediatamente o preço sem justificativa.",
+                "b) Explicar o valor e os benefícios do produto/serviço.",
+                "c) Concordar que o preço é alto e sugerir um concorrente.",
+                "d) Ignorar a objeção e continuar com a apresentação."
+            ],
+            answer: 1
+        },
+        {
+            question: "2. Objeção: 'Preciso pensar sobre isso.' Como você deve reagir quando o cliente diz que precisa pensar?",
+            options: [
+                "a) Concordar e esperar que ele retorne por conta própria.",
+                "b) Fazer perguntas para entender as dúvidas e oferecer mais informações.",
+                "c) Pressioná-lo para tomar uma decisão imediata.",
+                "d) Desistir da venda e seguir para o próximo cliente."
+            ],
+            answer: 1
+        },
+        {
+            question: "3. Objeção: 'Já tenho um fornecedor.' O que fazer quando o cliente diz que já tem um fornecedor?",
+            options: [
+                "a) Desistir imediatamente da venda.",
+                "b) Perguntar sobre a satisfação com o fornecedor atual e destacar diferenciais.",
+                "c) Criticar o fornecedor atual para ganhar credibilidade.",
+                "d) Oferecer um desconto imediato para tentar convencê-lo."
+            ],
+            answer: 1
+        },
+        {
+            question: "4. Objeção: 'Não estou interessado.' Como lidar com um cliente que diz não estar interessado?",
+            options: [
+                "a) Aceitar a resposta e encerrar a conversa.",
+                "b) Perguntar o motivo da falta de interesse e tentar entender suas necessidades.",
+                "c) Insistir repetidamente até que ele mude de ideia.",
+                "d) Oferecer um produto diferente sem entender suas necessidades."
+            ],
+            answer: 1
+        },
+        {
+            question: "5. Objeção: 'Não tenho dinheiro agora.' O que fazer quando o cliente diz que não tem dinheiro?",
+            options: [
+                "a) Oferecer um desconto imediato para fechar a venda.",
+                "b) Sugerir opções de pagamento ou planos de parcelamento.",
+                "c) Concordar e encerrar a conversa.",
+                "d) Ignorar a objeção e continuar a apresentação."
+            ],
+            answer: 1
+        },
+        {
+            question: "6. Objeção: 'Não confio na sua empresa.' Como lidar com a falta de confiança do cliente?",
+            options: [
+                "a) Ignorar a objeção e continuar a venda.",
+                "b) Apresentar cases de sucesso, depoimentos e garantias.",
+                "c) Criticar os concorrentes para ganhar credibilidade.",
+                "d) Desistir da venda imediatamente."
+            ],
+            answer: 1
+        },
+        {
+            question: "7. Objeção: 'Não vejo valor no seu produto/serviço.' O que fazer quando o cliente não vê valor no que você oferece?",
+            options: [
+                "a) Concordar e sugerir um produto mais barato.",
+                "b) Reforçar os benefícios e resultados que o produto/serviço pode trazer.",
+                "c) Reduzir o preço sem explicar o valor.",
+                "d) Encerrar a conversa e seguir para o próximo cliente."
+            ],
+            answer: 1
+        },
+        {
+            question: "8. Objeção: 'Já tive uma experiência ruim com um produto similar.' Como reagir quando o cliente menciona uma experiência negativa anterior?",
+            options: [
+                "a) Ignorar a experiência passada e continuar a venda.",
+                "b) Ouvir atentamente, mostrar empatia e explicar como seu produto é diferente.",
+                "c) Criticar o produto anterior para ganhar credibilidade.",
+                "d) Desistir da venda imediatamente."
+            ],
+            answer: 1
+        },
+        {
+            question: "9. Objeção: 'Preciso falar com meu sócio/chefe antes de decidir.' O que fazer quando o cliente precisa consultar outra pessoa?",
+            options: [
+                "a) Esperar que ele retorne por conta própria.",
+                "b) Oferecer materiais de apoio e se disponibilizar para falar com o sócio/chefe.",
+                "c) Pressioná-lo para tomar uma decisão imediata.",
+                "d) Desistir da venda e seguir para o próximo cliente."
+            ],
+            answer: 1
+        },
+        {
+            question: "10. Objeção: 'Não é uma prioridade no momento.' Como lidar quando o cliente diz que não é uma prioridade?",
+            options: [
+                "a) Concordar e encerrar a conversa.",
+                "b) Entender os objetivos do cliente e mostrar como seu produto/serviço pode ajudar.",
+                "c) Oferecer um desconto para torná-lo uma prioridade.",
+                "d) Ignorar a objeção e continuar a apresentação."
+            ],
+            answer: 1
+        }
+    ];
+}
     </script>
 </body>
 </html>
